@@ -22,10 +22,12 @@ import Level6Rain from './components/levels/Level6Rain';
 import Level7PipeRitual from './components/levels/Level7PipeRitual';
 import Level8SecurityRoom from './components/levels/Level8SecurityRoom';
 import PipeMonsterGame from './components/PipeMonsterGame';
+import LoadingScreen from './components/LoadingScreen';
 import { soundManager } from './components/SoundManager';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>('MENU');
+  const [nextState, setNextState] = useState<GameState>('MENU');
   const [language, setLanguage] = useState<Language>('tr');
   const [night, setNight] = useState(1);
   const [hour, setHour] = useState(0); 
@@ -62,6 +64,11 @@ const App: React.FC = () => {
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const transitionTo = (state: GameState) => {
+    setNextState(state);
+    setGameState('LOADING');
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
@@ -75,7 +82,7 @@ const App: React.FC = () => {
       if (e.altKey && key === 'q' && gameState === 'DAY') {
         setCheatMessage('>> ZAMAN BÜKÜLDÜ <<');
         setSkipNotification(true);
-        setGameState('NIGHT');
+        transitionTo('NIGHT');
         setTimeout(() => setSkipNotification(false), 1500);
       }
     };
@@ -148,18 +155,26 @@ const App: React.FC = () => {
         </div>
       )}
 
+      {gameState === 'LOADING' && (
+        <LoadingScreen 
+          language={language} 
+          targetState={nextState} 
+          onComplete={() => setGameState(nextState)} 
+        />
+      )}
+
       {gameState === 'MENU' && (
         <Menu 
           night={night} language={language} onLanguageChange={setLanguage}
-          onStartClassic={() => setGameState('DAY')} 
-          onStartNewGame={() => setGameState('NEW_OFFICE')}
-          onStartUnderground={() => setGameState('UNDERGROUND')}
-          onOpenMods={() => setGameState('MOD_SHOP')}
-          onOpenModRoom={() => setGameState('MOD_ROOM')}
-          onStartHelpWanted={() => setGameState('HUB')}
-          onOpenCustomNight={() => setGameState('CUSTOM_NIGHT_SETUP')}
-          onStartPipeGame={() => setGameState('PIPE_MONSTER_GAME')}
-          onOpenAILounge={() => setGameState('AI_LOUNGE')}
+          onStartClassic={() => transitionTo('DAY')} 
+          onStartNewGame={() => transitionTo('NEW_OFFICE')}
+          onStartUnderground={() => transitionTo('UNDERGROUND')}
+          onOpenMods={() => transitionTo('MOD_SHOP')}
+          onOpenModRoom={() => transitionTo('MOD_ROOM')}
+          onStartHelpWanted={() => transitionTo('HUB')}
+          onOpenCustomNight={() => transitionTo('CUSTOM_NIGHT_SETUP')}
+          onStartPipeGame={() => transitionTo('PIPE_MONSTER_GAME')}
+          onOpenAILounge={() => transitionTo('AI_LOUNGE')}
           settings={settings} setSettings={setSettings} 
         />
       )}
@@ -167,8 +182,8 @@ const App: React.FC = () => {
       {gameState === 'MOD_SHOP' && <ModShop language={language} settings={settings} setSettings={setSettings} onBack={() => setGameState('MENU')} />}
       {gameState === 'MOD_ROOM' && <ModRoom language={language} settings={settings} setSettings={setSettings} onBack={() => setGameState('MENU')} />}
       {gameState === 'UNDERGROUND' && <Underground language={language} settings={settings} onWin={handleWinClassic} onLose={handleGameOver} />}
-      {gameState === 'HUB' && <Hub language={language} onSelectLevel={(lvl) => setGameState(lvl)} onBack={() => setGameState('MENU')} entityConfigActive={settings.entityConfigActive} settings={settings} setSettings={setSettings} />}
-      {gameState === 'DAY' && <DayOffice language={language} onWorkComplete={() => setGameState('NIGHT')} />}
+      {gameState === 'HUB' && <Hub language={language} onSelectLevel={(lvl) => transitionTo(lvl)} onBack={() => setGameState('MENU')} entityConfigActive={settings.entityConfigActive} settings={settings} setSettings={setSettings} />}
+      {gameState === 'DAY' && <DayOffice language={language} onWorkComplete={() => transitionTo('NIGHT')} />}
       {gameState === 'PIPE_MONSTER_GAME' && <PipeMonsterGame language={language} onWin={() => setGameState('MENU')} onLose={handleGameOver} />}
       {gameState === 'AI_LOUNGE' && <AILounge language={language} onBack={() => setGameState('MENU')} />}
       
@@ -189,14 +204,14 @@ const App: React.FC = () => {
       
       {gameState === 'NEW_OFFICE' && <NewOffice language={language} night={night} hour={hour} entities={entities} onGameOver={handleGameOver} setEntities={setEntities} cheatActive={settings.entityConfigActive} />}
       
-      {gameState === 'LEVEL1' && <Level1Factory language={language} onWin={() => setGameState('HUB')} onLose={handleGameOver} />}
-      {gameState === 'LEVEL2' && <Level2Store language={language} onWin={() => setGameState('HUB')} onLose={handleGameOver} />}
-      {gameState === 'LEVEL3' && <Level3Repair language={language} onWin={() => setGameState('HUB')} onLose={handleGameOver} />}
-      {gameState === 'LEVEL4' && <Level4Pipe language={language} onWin={() => setGameState('HUB')} onLose={handleGameOver} />}
-      {gameState === 'LEVEL5' && <Level5Forest language={language} onWin={() => setGameState('HUB')} onLose={handleGameOver} />}
-      {gameState === 'LEVEL6' && <Level6Rain language={language} onWin={() => setGameState('HUB')} onLose={handleGameOver} />}
-      {gameState === 'LEVEL7' && <Level7PipeRitual language={language} onWin={() => { setSettings(s => ({ ...s, pipeMonsterUnlocked: true })); setGameState('HUB'); }} onLose={handleGameOver} />}
-      {gameState === 'LEVEL8' && <Level8SecurityRoom language={language} hour={hour} onWin={() => setGameState('HUB')} onLose={handleGameOver} />}
+      {gameState === 'LEVEL1' && <Level1Factory language={language} onWin={() => transitionTo('HUB')} onLose={handleGameOver} />}
+      {gameState === 'LEVEL2' && <Level2Store language={language} onWin={() => transitionTo('HUB')} onLose={handleGameOver} />}
+      {gameState === 'LEVEL3' && <Level3Repair language={language} onWin={() => transitionTo('HUB')} onLose={handleGameOver} />}
+      {gameState === 'LEVEL4' && <Level4Pipe language={language} onWin={() => transitionTo('HUB')} onLose={handleGameOver} />}
+      {gameState === 'LEVEL5' && <Level5Forest language={language} onWin={() => transitionTo('HUB')} onLose={handleGameOver} />}
+      {gameState === 'LEVEL6' && <Level6Rain language={language} onWin={() => transitionTo('HUB')} onLose={handleGameOver} />}
+      {gameState === 'LEVEL7' && <Level7PipeRitual language={language} onWin={() => { setSettings(s => ({ ...s, pipeMonsterUnlocked: true })); transitionTo('HUB'); }} onLose={handleGameOver} />}
+      {gameState === 'LEVEL8' && <Level8SecurityRoom language={language} hour={hour} onWin={() => transitionTo('HUB')} onLose={handleGameOver} />}
 
       {gameState === 'JUMPSCARE' && <Jumpscare language={language} reason={deathReason} />}
       {gameState === 'ENDING' && <Ending language={language} onFinish={() => setGameState('MENU')} />}

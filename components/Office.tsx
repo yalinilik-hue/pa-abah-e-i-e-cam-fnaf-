@@ -64,7 +64,6 @@ const Office: React.FC<OfficeProps> = ({ language, night, hour, entities, setEnt
   const handleEntityAttackAction = () => {
     setEntityVictory(true);
     soundManager.playScream();
-    // Varlık kazandığında ödül (negatif ödül veya sadece başarı ekranı)
     setTimeout(onWin, 5000);
   };
 
@@ -83,8 +82,16 @@ const Office: React.FC<OfficeProps> = ({ language, night, hour, entities, setEnt
   }
 
   return (
-    <div className={`relative w-full h-full overflow-hidden transition-colors duration-1000 ${isFinalHour ? 'bg-red-950/20' : 'bg-zinc-900'}`}>
+    <div className={`relative w-full h-full overflow-hidden transition-colors duration-1000 ${isFinalHour ? 'bg-red-950/20' : 'bg-black'}`}>
       
+      {/* Kulübe Penceresi / Dışarıyı Görme */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+          <div className="w-full h-full opacity-30 bg-[url('https://images.unsplash.com/photo-1517420704952-d9f39e95b43e?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center grayscale brightness-50 contrast-150"></div>
+          {/* Kirli Cam Efekti */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-60"></div>
+          <div className="absolute inset-0 border-[60px] border-zinc-900/90 shadow-[inset_0_0_100px_black]"></div>
+      </div>
+
       {/* P.A.S.A Assistant Button */}
       <div className="absolute top-10 right-10 z-50">
         <button 
@@ -95,33 +102,31 @@ const Office: React.FC<OfficeProps> = ({ language, night, hour, entities, setEnt
         </button>
       </div>
 
-      <div className={`absolute inset-0 flex transition-all duration-700 ${doorOpen ? 'bg-zinc-800' : 'bg-zinc-950 border-r-8 border-zinc-900'}`}>
-        <div className="w-full h-full flex items-center justify-center">
-            <div className="relative w-1/2 h-2/3 border-8 border-zinc-700 rounded-xl bg-zinc-900 flex flex-col items-center justify-center shadow-2xl overflow-hidden">
-                <div className="text-zinc-600 mb-6 font-black tracking-widest text-xl italic uppercase font-mono">GÜVENLİK TERMİNALİ</div>
-                <div className="bg-black w-4/5 h-1/2 border-4 border-zinc-800 flex items-center justify-center relative overflow-hidden shadow-inner">
-                   <div className="text-center">
-                     <p className="text-[12px] text-blue-500 font-mono tracking-widest animate-pulse uppercase">{threatAtDoor ? 'TEHLİKE KAPIDA!' : (isFinalHour ? 'KAPATMAYA HAZIR' : 'SİSTEM_AKTİF')}</p>
-                   </div>
-                </div>
-            </div>
-        </div>
+      {/* Ana Masa / Terminal */}
+      <div className={`absolute inset-0 flex items-end justify-center z-10 pointer-events-none`}>
+          <div className="w-2/3 h-1/2 bg-zinc-900 border-t-[20px] border-zinc-800 rounded-t-[100px] shadow-[0_-50px_100px_black] flex flex-col items-center pt-8">
+              <div className="w-40 h-2 bg-red-600/30 blur-sm animate-pulse mb-4"></div>
+              <div className="w-1/2 h-40 bg-black border-4 border-zinc-800 rounded-xl relative overflow-hidden flex items-center justify-center shadow-inner">
+                  <div className="absolute inset-0 bg-green-500/5 animate-pulse"></div>
+                  <p className="text-green-500 font-mono text-[10px] uppercase tracking-widest">{threatAtDoor ? '!!! KAPIYA BAK !!!' : 'TERMINAL_CONNECTED'}</p>
+              </div>
+          </div>
       </div>
 
-      <div className="absolute left-16 top-1/2 -translate-y-1/2 flex flex-col gap-8">
-        <button onClick={() => setDoorOpen(!doorOpen)} className={`px-12 py-10 border-8 font-black text-xl transition-all shadow-2xl ${doorOpen ? 'border-zinc-700 text-zinc-600' : 'border-red-600 bg-red-950 text-red-500 animate-pulse'}`}>
+      <div className="absolute left-16 top-1/2 -translate-y-1/2 flex flex-col gap-8 z-20">
+        <button onClick={() => setDoorOpen(!doorOpen)} className={`px-12 py-10 border-8 font-black text-xl transition-all shadow-2xl pointer-events-auto ${doorOpen ? 'border-zinc-700 bg-zinc-900 text-zinc-600 hover:text-white' : 'border-red-600 bg-red-950 text-red-500 animate-pulse'}`}>
           {doorOpen ? 'KAPIYI KİLİTLE' : 'KAPI KİLİTLİ'}
         </button>
       </div>
 
-      <div className="absolute top-12 left-12 space-y-4 font-black p-6 bg-black/40 border-l-4 border-green-500">
+      <div className="absolute top-12 left-12 space-y-4 font-black p-6 bg-black/40 border-l-4 border-green-500 z-20">
         <div className={`text-6xl ${isFinalHour ? 'text-red-500 animate-bounce' : 'text-white'} tracking-tighter`}>{hour} AM</div>
-        <div className="text-2xl text-zinc-500 uppercase tracking-widest">GECE NÖBETİ</div>
+        <div className="text-2xl text-zinc-500 uppercase tracking-widest">GÜVENLİK KULÜBESİ</div>
       </div>
 
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-12 bg-zinc-800 border-t-4 border-zinc-600 rounded-t-3xl flex items-center justify-center cursor-pointer hover:h-16 transition-all group"
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-12 bg-zinc-800 border-t-4 border-zinc-600 rounded-t-3xl flex items-center justify-center cursor-pointer hover:h-16 transition-all group z-30 pointer-events-auto shadow-[0_0_50px_black]"
            onClick={() => !threatAtDoor && setCamOpen(true)}>
-          <span className="text-[10px] text-zinc-500 font-black tracking-widest uppercase">{threatAtDoor ? 'SİSTEM HATASI' : 'MONİTÖR'}</span>
+          <span className="text-[10px] text-zinc-500 font-black tracking-widest uppercase group-hover:text-white transition-colors">{threatAtDoor ? 'SİSTEM HATASI' : 'MONİTÖRÜ AÇ'}</span>
       </div>
 
       {camOpen && (
@@ -144,6 +149,9 @@ const Office: React.FC<OfficeProps> = ({ language, night, hour, entities, setEnt
            <AILounge language={language} onBack={() => setAiOpen(false)} />
         </div>
       )}
+
+      {/* Lighting Flicker Effect */}
+      <div className="absolute inset-0 bg-white/5 animate-[pulse_0.1s_infinite] pointer-events-none opacity-10"></div>
     </div>
   );
 };
