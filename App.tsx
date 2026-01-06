@@ -54,7 +54,10 @@ const App: React.FC = () => {
     pipeMonsterUnlocked: false,
     completedClassic: false,
     completedHelpWanted: false,
-    completedNewOffice: false
+    completedNewOffice: false,
+    isPasaGold: false,
+    isVipSecurity: false,
+    isLethalElite: false
   });
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -85,12 +88,18 @@ const App: React.FC = () => {
       setEntities([]);
       return;
     }
-    const aiArray = isCustom ? settings.customNightAI : (settings.entityConfigActive ? settings.entityAI : Array(10).fill(difficulty));
+    let baseDifficulty = isCustom ? settings.customNightAI : (settings.entityConfigActive ? settings.entityAI : Array(10).fill(difficulty));
+    
+    // VIP Abonelik varlıkları yavaşlatır
+    if (settings.isVipSecurity) {
+      baseDifficulty = baseDifficulty.map((val: number) => Math.max(0, val - 3));
+    }
+
     const newEntities: Entity[] = Array.from({ length: 10 }, (_, i) => ({
       id: i,
       name: `Varlık ${i + 1}`,
       position: 0,
-      aggressive: (aiArray ? aiArray[i] : difficulty),
+      aggressive: (baseDifficulty[i]),
       isVisible: false
     }));
     setEntities(newEntities);
@@ -113,12 +122,14 @@ const App: React.FC = () => {
       }, intervalTime); 
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [gameState, night, settings.entityPresence]);
+  }, [gameState, night, settings.entityPresence, settings.isVipSecurity]);
 
   const handleWinClassic = () => {
     setGameState('MENU');
-    setSettings(prev => ({ ...prev, balance: prev.balance + 50000 }));
-    soundManager.speakHuman(language === 'tr' ? "Mesai bitti. Maaş yattı." : "Shift over. Salary paid.", language);
+    let reward = 50000;
+    if (settings.isLethalElite) reward *= 5; // Lethal Elite 5 kat maaş
+    setSettings(prev => ({ ...prev, balance: prev.balance + reward }));
+    soundManager.speakHuman(language === 'tr' ? `Mesai bitti. $${reward} maaş yattı.` : `Shift over. $${reward} salary paid.`, language);
   };
 
   const handleGameOver = (reason: string) => {

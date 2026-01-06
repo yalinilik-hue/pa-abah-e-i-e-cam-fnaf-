@@ -85,6 +85,46 @@ class SoundManager {
     whiteNoise.stop(ctx.currentTime + 1);
   }
 
+  public playKnock() {
+    this.initCtx();
+    const ctx = this.ctx!;
+    const now = ctx.currentTime;
+    
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(120, now);
+    osc.frequency.exponentialRampToValueAtTime(60, now + 0.1);
+    
+    gain.gain.setValueAtTime(0.4, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(now + 0.1);
+  }
+
+  public playMetalStress() {
+    this.initCtx();
+    const ctx = this.ctx!;
+    const now = ctx.currentTime;
+    
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(2500, now);
+    osc.frequency.exponentialRampToValueAtTime(1800, now + 0.05);
+    
+    gain.gain.setValueAtTime(0.05, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(now + 0.05);
+  }
+
   public speakHuman(text: string, language: Language = 'tr') {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
@@ -99,7 +139,6 @@ class SoundManager {
     const ctx = this.ctx!;
     const now = ctx.currentTime;
     
-    // Low rumble
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
@@ -114,7 +153,6 @@ class SoundManager {
     osc.start();
     osc.stop(now + 3);
 
-    // Bubbling sound
     for (let i = 0; i < 5; i++) {
       const bubble = ctx.createOscillator();
       const bGain = ctx.createGain();

@@ -26,7 +26,6 @@ const Office: React.FC<OfficeProps> = ({ language, night, hour, entities, setEnt
   const [lookingAtPipe, setLookingAtPipe] = useState(false);
   const [activeCam, setActiveCam] = useState(1);
   const [entityVictory, setEntityVictory] = useState(false);
-  const [attackPhase, setAttackPhase] = useState<'IDLE' | 'TARGET_SELECTED'>('IDLE');
   
   const moveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const threatAtDoor = entities.some(e => e.position === 7);
@@ -62,14 +61,11 @@ const Office: React.FC<OfficeProps> = ({ language, night, hour, entities, setEnt
     return () => { if (moveIntervalRef.current) clearInterval(moveIntervalRef.current); };
   }, [doorOpen, onGameOver, setEntities, language, entityMode, selectedEntityId]);
 
-  const handleEntityAttack = () => {
-    if (doorOpen) {
-      setEntityVictory(true);
-      soundManager.playScream();
-      setTimeout(onWin, 3000);
-    } else {
-      setAttackPhase('IDLE');
-    }
+  const handleEntityAttackAction = () => {
+    setEntityVictory(true);
+    soundManager.playScream();
+    // Varlık kazandığında ödül (negatif ödül veya sadece başarı ekranı)
+    setTimeout(onWin, 5000);
   };
 
   const isFinalHour = hour === 6;
@@ -80,6 +76,7 @@ const Office: React.FC<OfficeProps> = ({ language, night, hour, entities, setEnt
         <div className="text-[15rem] font-black text-black opacity-30 absolute inset-0 flex items-center justify-center select-none uppercase">VICTORY</div>
         <div className="z-10 bg-black text-red-600 p-20 border-8 border-red-500 shadow-[0_0_100px_rgba(255,0,0,1)] rotate-3">
            <h1 className="text-8xl font-black mb-4 italic uppercase tracking-tighter">VARLIK BAŞARISI</h1>
+           <p className="text-white font-black text-center text-xl tracking-widest">{language === 'tr' ? 'FABRİKA ARTIK SENİN' : 'FACTORY IS YOURS'}</p>
         </div>
       </div>
     );
@@ -127,9 +124,21 @@ const Office: React.FC<OfficeProps> = ({ language, night, hour, entities, setEnt
           <span className="text-[10px] text-zinc-500 font-black tracking-widest uppercase">{threatAtDoor ? 'SİSTEM HATASI' : 'MONİTÖR'}</span>
       </div>
 
-      {camOpen && <CameraSystem entities={entities} setEntities={setEntities} onClose={() => setCamOpen(false)} onPipeView={(active) => setLookingAtPipe(active)} onBottleSound={() => {}} onCamChange={setActiveCam} pipeTimer={pipeTimer} entityMode={entityMode} selectedEntityId={selectedEntityId} />}
+      {camOpen && (
+        <CameraSystem 
+          entities={entities} 
+          setEntities={setEntities} 
+          onClose={() => setCamOpen(false)} 
+          onPipeView={(active) => setLookingAtPipe(active)} 
+          onBottleSound={() => {}} 
+          onCamChange={setActiveCam} 
+          pipeTimer={pipeTimer} 
+          entityMode={entityMode} 
+          selectedEntityId={selectedEntityId} 
+          onEntityAttackGuard={handleEntityAttackAction}
+        />
+      )}
       
-      {/* In-Game AI Modal */}
       {aiOpen && (
         <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-12">
            <AILounge language={language} onBack={() => setAiOpen(false)} />

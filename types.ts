@@ -33,4 +33,8 @@ export interface GameSettings {
   completedClassic: boolean;
   completedHelpWanted: boolean;
   completedNewOffice: boolean;
+  // Yeni Abonelikler
+  isPasaGold: boolean;
+  isVipSecurity: boolean;
+  isLethalElite: boolean;
 }

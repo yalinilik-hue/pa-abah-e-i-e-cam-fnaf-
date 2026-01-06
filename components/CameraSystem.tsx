@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Entity } from '../types';
+import { soundManager } from './SoundManager';
 
 interface CameraSystemProps {
   entities: Entity[];
@@ -12,11 +13,24 @@ interface CameraSystemProps {
   entityMode?: boolean;
   selectedEntityId?: number;
   setEntities?: React.Dispatch<React.SetStateAction<Entity[]>>;
+  onEntityAttackGuard?: () => void; // Gardiyana saldırma callback'i
 }
 
-const CameraSystem: React.FC<CameraSystemProps> = ({ entities, onClose, onPipeView, onBottleSound, onCamChange, pipeTimer = 10, entityMode, selectedEntityId, setEntities }) => {
+const CameraSystem: React.FC<CameraSystemProps> = ({ 
+  entities, 
+  onClose, 
+  onPipeView, 
+  onBottleSound, 
+  onCamChange, 
+  pipeTimer = 10, 
+  entityMode, 
+  selectedEntityId, 
+  setEntities,
+  onEntityAttackGuard
+}) => {
   const [activeCam, setActiveCam] = useState(1);
-  const [vModeActive, setVModeActive] = useState(false);
+  const [isBreaching, setIsBreaching] = useState(false);
+  const [attackCooldown, setAttackCooldown] = useState(0);
 
   const cams = [
     { id: 1, name: "Ana Hol", x: 180, y: 150 },
@@ -31,15 +45,13 @@ const CameraSystem: React.FC<CameraSystemProps> = ({ entities, onClose, onPipeVi
 
   const handleCamClick = (id: number) => {
     if (entityMode && setEntities && selectedEntityId !== undefined) {
-      // VARLIK IŞINLAMA: Seçili varlığı o kameraya taşı
       setEntities(prev => prev.map(e => {
         if (e.id === selectedEntityId) {
-          // Pozisyon 7 ofis kapısıdır
           let targetPos = id;
           if (id === 4) targetPos = 3;
           if (id === 6) targetPos = 4;
           if (id === 7) targetPos = 5;
-          if (id === 8) targetPos = 7; // Ofis önü -> Kapı
+          if (id === 8) targetPos = 7; 
           return { ...e, position: targetPos };
         }
         return e;
@@ -52,14 +64,58 @@ const CameraSystem: React.FC<CameraSystemProps> = ({ entities, onClose, onPipeVi
     }
   };
 
+  const selectedEntity = entities.find(e => e.id === selectedEntityId);
+  const atOfficeDoor = selectedEntity?.position === 7;
+
+  const handleBreach = () => {
+    setIsBreaching(true);
+    soundManager.playEntityWhisper();
+  };
+
+  const handleFinalAttack = () => {
+    if (onEntityAttackGuard) {
+      onEntityAttackGuard();
+    }
+  };
+
   const entitiesInCam = entities.filter(e => {
-    if (vModeActive) return true;
     if (activeCam === 4) return e.position === 3; 
     if (activeCam === 6) return e.position === 4; 
     if (activeCam === 7) return e.position === 5; 
-    if (activeCam === 8) return e.position === 7; // Ofis önü kamerası 7. pozisyonu gösterir
+    if (activeCam === 8) return e.position === 7;
     return e.position === activeCam;
   });
+
+  if (isBreaching) {
+    return (
+      <div className="absolute inset-0 z-[100] bg-black flex flex-col items-center justify-center p-12 overflow-hidden">
+        <div className="absolute inset-0 bg-red-900/20 animate-pulse pointer-events-none"></div>
+        <div className="text-center mb-12 animate-in slide-in-from-top-12">
+           <h2 className="text-6xl font-black text-red-600 italic tracking-tighter mb-4">OFİS İÇİNDESİN</h2>
+           <p className="text-white font-mono text-sm tracking-[0.5em] animate-bounce">GARDİYAN SAVUNMASIZ MI?</p>
+        </div>
+
+        <div className="relative w-full max-w-4xl aspect-video border-8 border-red-600 bg-zinc-900 flex items-center justify-center shadow-[0_0_100px_rgba(255,0,0,0.5)]">
+           <div className="absolute inset-0 bg-[radial-gradient(circle,transparent_30%,black_100%)]"></div>
+           {/* Guard Visual (Simulated as First Person View) */}
+           <div className="relative z-10 flex flex-col items-center">
+              <div className="text-9xl mb-4 grayscale brightness-50">👤</div>
+              <div className="text-zinc-500 font-black italic uppercase">GÖREVLİ MASADA</div>
+           </div>
+        </div>
+
+        <div className="mt-12 flex gap-8">
+           <button 
+             onClick={handleFinalAttack}
+             className="px-24 py-10 bg-red-600 text-white font-black text-4xl border-4 border-white shadow-[0_0_50px_red] animate-pulse hover:scale-110 active:scale-95 transition-all uppercase italic"
+           >
+             SALDIR VE BİTİR
+           </button>
+           <button onClick={() => setIsBreaching(false)} className="px-12 py-10 bg-zinc-900 text-zinc-500 font-black uppercase border-2 border-zinc-700">GERİ ÇEKİL</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`absolute inset-0 z-[60] flex flex-col p-6 ${entityMode ? 'bg-red-950/40 backdrop-blur-sm' : 'bg-black/95'}`}>
@@ -68,6 +124,14 @@ const CameraSystem: React.FC<CameraSystemProps> = ({ entities, onClose, onPipeVi
           {entityMode ? `KONTROL: VARLIK ${selectedEntityId! + 1}` : `CAM ${activeCam}: ${cams.find(c => c.id === activeCam)?.name}`}
         </div>
         <div className="flex gap-4">
+           {entityMode && atOfficeDoor && (
+             <button 
+               onClick={handleBreach}
+               className="px-10 py-2 bg-red-600 text-white font-black border-4 border-white animate-bounce shadow-[0_0_30px_red] uppercase italic"
+             >
+               OFİSE SIZ!
+             </button>
+           )}
            <button onClick={onClose} className="px-6 py-2 bg-red-600 text-white font-black hover:bg-red-500 uppercase italic">SİSTEMDEN ÇIK</button>
         </div>
       </div>
@@ -107,7 +171,7 @@ const CameraSystem: React.FC<CameraSystemProps> = ({ entities, onClose, onPipeVi
                   key={cam.id}
                   onClick={() => handleCamClick(cam.id)}
                   className={`absolute w-8 h-8 -translate-x-1/2 -translate-y-1/2 border-2 flex items-center justify-center font-black text-[8px] transition-all
-                    ${activeCam === cam.id ? 'bg-red-600 border-white text-white' : 'bg-black border-zinc-700 text-zinc-500 hover:border-blue-500'}`}
+                    ${activeCam === cam.id ? (entityMode ? 'bg-red-600 border-white text-white' : 'bg-green-600 border-white text-white') : 'bg-black border-zinc-700 text-zinc-500 hover:border-blue-500'}`}
                   style={{ left: cam.x, top: cam.y }}
                 >
                   C{cam.id}
